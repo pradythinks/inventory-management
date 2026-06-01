@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 Factory Inventory Management System Demo with GitHub integration - Full-stack application with Vue 3 frontend, Python FastAPI backend, and in-memory mock data (no database).
 
 ## Critical Tool Usage Rules
@@ -31,14 +33,29 @@ Use the Task tool with these specialized subagents for appropriate tasks:
 ## Quick Start
 
 ```bash
-# Backend
-cd server
-uv run python main.py
+# Unix/macOS - start both servers together
+./scripts/start.sh
+./scripts/stop.sh
 
-# Frontend
-cd client
-npm install && npm run dev
+# Windows (or manual) - run in separate terminals
+cd server && uv run python main.py   # http://localhost:8001 | docs: /docs
+cd client && npm install && npm run dev  # http://localhost:3000
 ```
+
+## Testing
+
+```bash
+# Run all backend tests (from repo root)
+cd tests && uv run pytest backend/ -v
+
+# Run a single test file
+cd tests && uv run pytest backend/test_dashboard.py -v
+
+# Run a single test function
+cd tests && uv run pytest backend/test_dashboard.py::test_function_name -v
+```
+
+No frontend test suite exists; use Playwright MCP tools for browser testing against `http://localhost:3000`.
 
 ## Key Patterns
 
@@ -66,6 +83,9 @@ npm install && npm run dev
 - Backend: `server/main.py`, `server/mock_data.py`
 - Data: `server/data/*.json`
 - Styles: `client/src/App.vue`
+
+## Code Style
+- Always document non-obvious logic changes with comments
 
 ## Design System
 - Colors: Slate/gray (#0f172a, #64748b, #e2e8f0)
