@@ -8,28 +8,33 @@
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else>
-      <div class="stats-grid">
+      <div class="tab-toggle">
+        <button :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">All Orders</button>
+        <button :class="{ active: activeTab === 'restocking' }" @click="activeTab = 'restocking'">Restocking Orders</button>
+      </div>
+
+      <div v-if="activeTab === 'all'" class="stats-grid">
         <div class="stat-card success">
           <div class="stat-label">{{ t('status.delivered') }}</div>
-          <div class="stat-value">{{ getOrdersByStatus('Delivered').length }}</div>
+          <div class="stat-value">{{ getNonSubmittedOrdersByStatus('Delivered').length }}</div>
         </div>
         <div class="stat-card info">
           <div class="stat-label">{{ t('status.shipped') }}</div>
-          <div class="stat-value">{{ getOrdersByStatus('Shipped').length }}</div>
+          <div class="stat-value">{{ getNonSubmittedOrdersByStatus('Shipped').length }}</div>
         </div>
         <div class="stat-card warning">
           <div class="stat-label">{{ t('status.processing') }}</div>
-          <div class="stat-value">{{ getOrdersByStatus('Processing').length }}</div>
+          <div class="stat-value">{{ getNonSubmittedOrdersByStatus('Processing').length }}</div>
         </div>
         <div class="stat-card danger">
           <div class="stat-label">{{ t('status.backordered') }}</div>
-          <div class="stat-value">{{ getOrdersByStatus('Backordered').length }}</div>
+          <div class="stat-value">{{ getNonSubmittedOrdersByStatus('Backordered').length }}</div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">{{ t('orders.allOrders') }} ({{ orders.length }})</h3>
+          <h3 class="card-title">{{ t('orders.allOrders') }} ({{ displayedOrders.length }})</h3>
         </div>
         <div class="table-container">
           <table class="orders-table">
@@ -45,7 +50,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in orders" :key="order.id">
+              <tr v-for="order in displayedOrders" :key="order.id">
                 <td class="col-order-number"><strong>{{ order.order_number }}</strong></td>
                 <td class="col-customer">{{ translateCustomerName(order.customer) }}</td>
                 <td class="col-items">
@@ -95,6 +100,7 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+    const activeTab = ref('all')
 
     // Use shared filters
     const {
@@ -129,8 +135,19 @@ export default {
       loadOrders()
     })
 
+    const displayedOrders = computed(() => {
+      if (activeTab.value === 'restocking') {
+        return orders.value.filter(order => order.status === 'Submitted')
+      }
+      return orders.value.filter(order => order.status !== 'Submitted')
+    })
+
     const getOrdersByStatus = (status) => {
       return orders.value.filter(order => order.status === status)
+    }
+
+    const getNonSubmittedOrdersByStatus = (status) => {
+      return orders.value.filter(order => order.status !== 'Submitted' && order.status === status)
     }
 
     const getOrderStatusClass = (status) => {
@@ -138,7 +155,8 @@ export default {
         'Delivered': 'success',
         'Shipped': 'info',
         'Processing': 'warning',
-        'Backordered': 'danger'
+        'Backordered': 'danger',
+        'Submitted': 'info'
       }
       return statusMap[status] || 'info'
     }
@@ -160,7 +178,10 @@ export default {
       loading,
       error,
       orders,
+      activeTab,
+      displayedOrders,
       getOrdersByStatus,
+      getNonSubmittedOrdersByStatus,
       getOrderStatusClass,
       formatDate,
       currencySymbol,
@@ -172,6 +193,33 @@ export default {
 </script>
 
 <style scoped>
+.tab-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.tab-toggle button {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tab-toggle button.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+  font-weight: 600;
+}
+.tab-toggle button:hover:not(.active) {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
 /* Fixed table layout to prevent column shifting */
 .orders-table {
   table-layout: fixed;
