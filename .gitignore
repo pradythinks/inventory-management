@@ -52,3 +52,7 @@ logs/
 
 # Environment variables
 .env
+
+# Screenshots (test/debug artifacts)
+screenshot_*.png
+architecture.html
